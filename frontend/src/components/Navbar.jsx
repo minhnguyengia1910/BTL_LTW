@@ -17,9 +17,10 @@ function Navbar(props) {
         <nav className="menu-phai">
           {nguoiDung ? (
             <>
+              <Link to="/trang-ca-nhan" className="menu-link">Trang cá nhân</Link>
               <Link to="/bai-viet-cua-toi" className="menu-link">Bài của tôi</Link>
               <Link to="/viet-bai" className="nut nut-chinh nut-nho">✍️ Viết bài</Link>
-              <span className="ten-nguoi-dung">Chào, {nguoiDung.ten}</span>
+              <span className="ten-nguoi-dung">{nguoiDung.anh_dai_dien && <img className="menu-anh-dai-dien" src={nguoiDung.anh_dai_dien} alt="" />}Chào, {nguoiDung.ten || "Ẩn danh"}</span>
               <button className="nut nut-vien nut-nho" onClick={xuLyDangXuat}>Đăng xuất</button>
             </>
           ) : (

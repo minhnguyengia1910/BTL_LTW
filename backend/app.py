@@ -5,6 +5,7 @@ import re
 import random
 import smtplib
 import datetime
+import unicodedata
 from email.mime.text import MIMEText
 from email.header import Header
 from functools import wraps
@@ -136,6 +137,45 @@ def gui_email_otp(email_nhan, ma_otp):
         may_chu.sendmail(email_gui, [email_nhan], thu.as_string())
 
 
+def bo_dau_tieng_viet(chuoi):
+    """Chuẩn hoá câu hỏi để nhận biết ý định bằng từ khoá đơn giản."""
+    chuoi = unicodedata.normalize("NFD", chuoi.lower())
+    chuoi = "".join(ky_tu for ky_tu in chuoi if unicodedata.category(ky_tu) != "Mn")
+    return chuoi.replace("đ", "d")
+
+
+def thong_ke_bai_viet(nguoi_dung):
+    """Tổng hợp bài đã đăng công khai và bản nháp của chính người đang đăng nhập."""
+    bo_loc = {"trang_thai": "dang"}
+    if nguoi_dung:
+        bo_loc = {"$or": [
+            {"trang_thai": "dang"},
+            {"trang_thai": "nhap", "nguoi_dung_id": ObjectId(nguoi_dung["id"])},
+        ]}
+
+    cac_bai = list(bai_viet_col.find(bo_loc, {
+        "tieu_de": 1, "the_loai": 1, "luot_xem": 1, "trang_thai": 1,
+    }))
+    bai_cong_khai = [bai for bai in cac_bai if bai.get("trang_thai") == "dang"]
+    theo_the_loai = {}
+    for bai in bai_cong_khai:
+        ten = bai.get("the_loai") or "Khác"
+        theo_the_loai[ten] = theo_the_loai.get(ten, 0) + 1
+
+    noi_bat = sorted(bai_cong_khai, key=lambda bai: bai.get("luot_xem", 0), reverse=True)[:3]
+    return {
+        "tong_bai_dang": len(bai_cong_khai),
+        "tong_ban_nhap": len(cac_bai) - len(bai_cong_khai),
+        "tong_luot_xem": sum(bai.get("luot_xem", 0) for bai in bai_cong_khai),
+        "theo_the_loai": theo_the_loai,
+        "bai_noi_bat": [{
+            "id": str(bai["_id"]),
+            "tieu_de": bai.get("tieu_de", ""),
+            "luot_xem": bai.get("luot_xem", 0),
+        } for bai in noi_bat],
+    }
+
+
 # =====================================================
 # 3. XÁC THỰC: đăng ký, đăng nhập, quên mật khẩu
 # =====================================================
@@ -187,6 +227,92 @@ def dang_nhap():
 @can_dang_nhap
 def thong_tin_cua_toi():
     return jsonify({"nguoi_dung": g.nguoi_dung})
+
+
+@app.route("/api/trang-ca-nhan", methods=["GET"])
+@can_dang_nhap
+def lay_trang_ca_nhan():
+    return jsonify({
+        "ten": g.nguoi_dung.get("ten", ""),
+        "tuoi": g.nguoi_dung.get("tuoi", ""),
+        "so_thich": g.nguoi_dung.get("so_thich", ""),
+        "chuc_vu": g.nguoi_dung.get("chuc_vu", ""),
+        "truong_hoc_cong_ty": g.nguoi_dung.get("truong_hoc_cong_ty", ""),
+        "anh_dai_dien": g.nguoi_dung.get("anh_dai_dien", ""),
+    })
+
+
+@app.route("/api/trang-ca-nhan", methods=["PUT"])
+@can_dang_nhap
+def cap_nhat_trang_ca_nhan():
+    du_lieu = request.get_json() or {}
+    cap_nhat = {}
+    ten_cu = g.nguoi_dung.get("ten", "")
+
+    if "ten" in du_lieu:
+        ten = str(du_lieu.get("ten") or "").strip()
+        if len(ten) > 80:
+            return loi("Tên không được dài quá 80 ký tự")
+        cap_nhat["ten"] = ten
+
+    if "tuoi" in du_lieu:
+        tuoi = du_lieu.get("tuoi")
+        if tuoi in (None, ""):
+            cap_nhat["tuoi"] = ""
+        else:
+            try:
+                tuoi = int(tuoi)
+            except (TypeError, ValueError):
+                return loi("Tuổi phải là số nguyên")
+            if tuoi < 1 or tuoi > 120:
+                return loi("Tuổi phải nằm trong khoảng 1 đến 120")
+            cap_nhat["tuoi"] = tuoi
+
+    cac_truong = ("so_thich", "chuc_vu", "truong_hoc_cong_ty")
+    for truong in cac_truong:
+        if truong in du_lieu:
+            gia_tri = str(du_lieu.get(truong) or "").strip()
+            if len(gia_tri) > 300:
+                return loi("Mỗi thông tin chỉ được dài tối đa 300 ký tự")
+            cap_nhat[truong] = gia_tri
+
+    if "anh_dai_dien" in du_lieu:
+        anh = str(du_lieu.get("anh_dai_dien") or "")
+        if anh and not re.match(r"^data:image/(png|jpeg|webp);base64,", anh):
+            return loi("Ảnh đại diện phải là PNG, JPG hoặc WebP")
+        if len(anh) > 1400000:
+            return loi("Ảnh quá lớn, vui lòng chọn ảnh nhỏ hơn 1 MB")
+        cap_nhat["anh_dai_dien"] = anh
+
+    if cap_nhat:
+        nguoi_dung_col.update_one(
+            {"_id": ObjectId(g.nguoi_dung["id"])},
+            {"$set": cap_nhat},
+        )
+        ten_moi = cap_nhat.get("ten", ten_cu)
+        if ten_moi != ten_cu:
+            bai_viet_col.update_many(
+                {"nguoi_dung_id": ObjectId(g.nguoi_dung["id"])},
+                {"$set": {"tac_gia": ten_moi or "Ẩn danh"}},
+            )
+    return jsonify({"thong_diep": "Đã cập nhật trang cá nhân"})
+
+
+@app.route("/api/trang-ca-nhan", methods=["DELETE"])
+@can_dang_nhap
+def xoa_thong_tin_trang_ca_nhan():
+    nguoi_dung_id = ObjectId(g.nguoi_dung["id"])
+    nguoi_dung_col.update_one(
+        {"_id": nguoi_dung_id},
+        {"$set": {"ten": ""}, "$unset": {
+            "tuoi": "", "so_thich": "", "chuc_vu": "", "truong_hoc_cong_ty": "", "anh_dai_dien": "",
+        }},
+    )
+    bai_viet_col.update_many(
+        {"nguoi_dung_id": nguoi_dung_id},
+        {"$set": {"tac_gia": "Ẩn danh"}},
+    )
+    return jsonify({"thong_diep": "Đã xóa thông tin trang cá nhân"})
 
 
 @app.route("/api/quen-mat-khau", methods=["POST"])
@@ -309,6 +435,47 @@ def danh_sach_bai_viet():
     })
 
 
+@app.route("/api/tro-ly", methods=["POST"])
+def tro_ly_bai_viet():
+    """Trợ lý từ khoá: tìm bài viết hoặc tổng hợp số liệu mà không gọi dịch vụ AI ngoài."""
+    du_lieu = request.get_json() or {}
+    cau_hoi = (du_lieu.get("tin_nhan") or "").strip()[:200]
+    if not cau_hoi:
+        return loi("Bạn hãy nhập câu hỏi cho trợ lý")
+
+    cau_chuan = bo_dau_tieng_viet(cau_hoi)
+    tu_thong_ke = ("thong ke", "tong hop", "bao cao", "so lieu", "co bao nhieu", "noi bat")
+    if any(tu in cau_chuan for tu in tu_thong_ke):
+        nguoi_dung = lay_nguoi_dung_hien_tai()
+        return jsonify({"loai": "thong_ke", "du_lieu": thong_ke_bai_viet(nguoi_dung)})
+
+    cau_chuan = bo_dau_tieng_viet(cau_hoi)
+    mau_cau_lenh = r"^(?:cho toi |hay |giup toi )?(?:tim kiem bai viet(?: ve )?|tim bai viet(?: ve )?|tim kiem |tim |search )"
+    cau_sau_lenh = re.sub(mau_cau_lenh, "", cau_chuan, flags=re.IGNORECASE)
+    do_dai_lenh = len(cau_chuan) - len(cau_sau_lenh)
+    tu_tim = cau_hoi[do_dai_lenh:].strip(" ?!.,:;")
+    if not tu_tim:
+        return jsonify({"loai": "goi_y", "thong_diep": "Bạn muốn tìm bài viết theo tiêu đề hay chủ đề nào?"})
+
+    mau_tim = {"$regex": re.escape(tu_tim), "$options": "i"}
+    cac_bai = list(bai_viet_col.find({
+        "trang_thai": "dang",
+        "$or": [{"tieu_de": mau_tim}, {"tom_tat": mau_tim}, {"noi_dung": mau_tim}],
+    }, {"noi_dung": 0}).sort("ngay_tao", -1).limit(5))
+
+    ket_qua = []
+    for bai in cac_bai:
+        ket_qua.append({
+            "id": str(bai["_id"]),
+            "tieu_de": bai.get("tieu_de", ""),
+            "tom_tat": bai.get("tom_tat", ""),
+            "the_loai": bai.get("the_loai", "Khác"),
+            "tac_gia": bai.get("tac_gia", ""),
+            "luot_xem": bai.get("luot_xem", 0),
+        })
+    return jsonify({"loai": "tim_kiem", "tu_khoa": tu_tim, "danh_sach": ket_qua})
+
+
 @app.route("/api/bai-viet/<bai_id>", methods=["GET"])
 def chi_tiet_bai_viet(bai_id):
     oid = lay_object_id(bai_id)
@@ -354,7 +521,7 @@ def them_bai_viet():
         return loi(thong_bao_loi)
 
     bai["nguoi_dung_id"] = ObjectId(g.nguoi_dung["id"])
-    bai["tac_gia"] = g.nguoi_dung["ten"]   # lưu luôn tên tác giả để khỏi phải tra cứu lại
+    bai["tac_gia"] = g.nguoi_dung.get("ten") or "Ẩn danh"  # lưu tên tác giả tại thời điểm đăng
     bai["luot_xem"] = 0
     bai["ngay_tao"] = bay_gio()
 

@@ -9,6 +9,8 @@ import BaiVietCuaToi from "./pages/BaiVietCuaToi.jsx";
 import DangNhap from "./pages/DangNhap.jsx";
 import DangKy from "./pages/DangKy.jsx";
 import QuenMatKhau from "./pages/QuenMatKhau.jsx";
+import TroLyChat from "./components/TroLyChat.jsx";
+import TrangCaNhan from "./pages/TrangCaNhan.jsx";
 
 // Bọc những trang bắt buộc đăng nhập: chưa đăng nhập thì chuyển sang trang đăng nhập
 function BaoVe(props) {
@@ -64,6 +66,7 @@ function App() {
           <Route path="/dang-nhap" element={<DangNhap setNguoiDung={setNguoiDung} />} />
           <Route path="/dang-ky" element={<DangKy />} />
           <Route path="/quen-mat-khau" element={<QuenMatKhau />} />
+          <Route path="/trang-ca-nhan" element={<BaoVe nguoiDung={nguoiDung}><TrangCaNhan setNguoiDung={setNguoiDung} /></BaoVe>} />
           <Route
             path="/viet-bai"
             element={<BaoVe nguoiDung={nguoiDung}><FormBaiViet /></BaoVe>}
@@ -79,6 +82,7 @@ function App() {
           <Route path="*" element={<p className="trong">Không tìm thấy trang này.</p>} />
         </Routes>
       </main>
+      {!laTrangXacThuc && <TroLyChat />}
     </>
   );
 }

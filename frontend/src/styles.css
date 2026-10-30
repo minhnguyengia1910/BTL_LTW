@@ -22,6 +22,7 @@ body {
   min-height: 100vh;
   color: var(--muc);
   font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  font-size: 17px;
   line-height: 1.65;
   background:
     radial-gradient(ellipse at 8% 4%, rgba(195, 230, 213, 0.48), transparent 32rem),
@@ -34,7 +35,7 @@ a { color: inherit; text-decoration: none; }
 button, input, textarea { font: inherit; }
 
 .khung {
-  width: min(100% - 40px, 1120px);
+  width: min(100% - 48px, 1320px);
   margin: 0 auto;
   padding: 42px 0 76px;
   animation: hien-len 0.55s ease both;
@@ -86,13 +87,14 @@ button, input, textarea { font: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(100% - 40px, 1120px);
+  width: 100%;
   min-height: 72px;
   margin: 0 auto;
+  padding: 12px clamp(18px, 3vw, 48px);
   gap: 20px;
 }
 
-.logo { color: var(--chinh-dam); font-size: 22px; font-weight: 800; letter-spacing: -0.04em; }
+.logo { color: var(--chinh-dam); font-size: 26px; font-weight: 800; letter-spacing: -0.04em; }
 .menu-phai { display: flex; align-items: center; gap: 18px; }
 .menu-link { color: #405650; font-weight: 600; transition: color 0.2s ease; }
 .menu-link:hover { color: var(--chinh); }
@@ -187,7 +189,7 @@ button, input, textarea { font: inherit; }
 
 /* 6. Trang chủ, tìm kiếm và lọc thể loại */
 .dau-trang { margin-bottom: 32px; }
-.dau-trang h1 { margin-bottom: 18px; font-size: clamp(30px, 4vw, 42px); }
+.dau-trang h1 { margin-bottom: 20px; font-size: clamp(34px, 4vw, 48px); }
 .o-tim-kiem { display: flex; gap: 10px; max-width: 620px; margin-bottom: 18px; }
 .o-tim-kiem .o-nhap { min-width: 0; }
 .hang-chip { display: flex; flex-wrap: wrap; gap: 9px; }
@@ -208,7 +210,7 @@ button, input, textarea { font: inherit; }
 .chip-chon:hover { color: #fff; background: var(--chinh-dam); }
 
 /* Thẻ bài viết có bóng nhẹ, nổi lên khi rê chuột */
-.luoi-the { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 24px; }
+.luoi-the { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 28px; }
 .the {
   display: flex;
   flex-direction: column;
@@ -227,7 +229,7 @@ button, input, textarea { font: inherit; }
 .the:nth-child(5) { animation-delay: 0.24s; }
 .the:nth-child(6) { animation-delay: 0.3s; }
 .the:hover, .the:focus-visible { transform: translateY(-6px); border-color: rgba(8, 126, 115, 0.42); box-shadow: var(--bong); }
-.the-anh { display: block; width: 100%; height: 190px; object-fit: cover; transition: transform 0.45s ease; }
+.the-anh { display: block; width: 100%; height: 220px; object-fit: cover; transition: transform 0.45s ease; }
 .the:hover .the-anh { transform: scale(1.04); }
 .the-anh-trong { display: flex; align-items: center; justify-content: center; color: var(--chinh-dam); background: linear-gradient(135deg, #e0f1e8, #f7f1dd); font-size: 52px; }
 .the-noi-dung { display: flex; flex: 1; flex-direction: column; gap: 10px; padding: 19px 20px 20px; }
@@ -269,15 +271,58 @@ button, input, textarea { font: inherit; }
 .nhan-trang-thai.dang { color: var(--ok); background: #e8f6ed; }
 .nhan-trang-thai.nhap { color: var(--xam); background: #edf1ef; }
 
-/* 9. Chuyển động ngắn, nhẹ để giao diện không gây rối */
+/* 9. Cửa sổ trợ lý nổi ở góc màn hình */
+.tro-ly { position: fixed; right: 24px; bottom: 24px; z-index: 30; }
+.tro-ly-nut { display: grid; width: 58px; height: 58px; place-items: center; border: 0; border-radius: 50%; color: #fff; background: var(--chinh); box-shadow: 0 12px 28px rgba(8, 92, 82, 0.3); font-size: 28px; cursor: pointer; transition: transform 0.2s ease, background 0.2s ease; }
+.tro-ly-nut:hover { transform: translateY(-3px) scale(1.03); background: var(--chinh-dam); }
+.tro-ly-hop { position: absolute; right: 0; bottom: 72px; display: flex; flex-direction: column; width: min(380px, calc(100vw - 32px)); height: min(590px, calc(100vh - 120px)); overflow: hidden; border: 1px solid var(--vien); border-radius: 20px; background: #fff; box-shadow: 0 24px 70px rgba(23, 59, 53, 0.22); animation: hien-len 0.2s ease both; }
+.tro-ly-dau { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; color: #fff; background: linear-gradient(135deg, var(--chinh), #145148); }
+.tro-ly-dau div { display: flex; flex-direction: column; }
+.tro-ly-dau span { color: rgba(255, 255, 255, 0.76); font-size: 12px; }
+.tro-ly-dong { border: 0; color: #fff; background: transparent; font-size: 27px; cursor: pointer; }
+.tro-ly-tin-nhan { display: flex; flex: 1; flex-direction: column; gap: 12px; overflow-y: auto; padding: 16px; background: #f7faf8; }
+.tro-ly-tin { max-width: 90%; align-self: flex-start; padding: 11px 13px; border: 1px solid #e6eeea; border-radius: 14px 14px 14px 4px; background: #fff; font-size: 14px; }
+.tro-ly-tin p { margin: 0; }
+.tro-ly-tin.ban { align-self: flex-end; border-color: var(--chinh); border-radius: 14px 14px 4px 14px; color: #fff; background: var(--chinh); }
+.tro-ly-ket-qua { display: flex; flex-direction: column; gap: 2px; margin-top: 9px; padding-top: 8px; border-top: 1px solid #e9efec; color: var(--muc); }
+.tro-ly-ket-qua span { color: var(--xam); font-size: 12px; }
+.tro-ly-so-lieu { display: grid; gap: 6px; margin-top: 8px; color: var(--muc); font-size: 13px; }
+.tro-ly-so-lieu a { color: var(--chinh-dam); }
+.tro-ly-goi-y, .tro-ly-hanh-dong { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 14px; background: #fff; }
+.tro-ly-goi-y button, .tro-ly-hanh-dong button { padding: 7px 10px; border: 1px solid var(--vien); border-radius: 999px; color: var(--chinh-dam); background: #fff; font-size: 12px; cursor: pointer; }
+.tro-ly-goi-y button:hover, .tro-ly-hanh-dong button:hover { border-color: var(--chinh); background: #eef8f3; }
+.tro-ly-hanh-dong button:last-child { border-color: var(--chinh); color: #fff; background: var(--chinh); }
+.tro-ly-nhap { display: flex; align-items: flex-end; gap: 8px; padding: 12px; border-top: 1px solid #e7efea; }
+.tro-ly-nhap textarea { flex: 1; min-width: 0; min-height: 52px; max-height: 120px; padding: 10px 12px; resize: vertical; overflow-y: auto; border: 1px solid var(--vien); border-radius: 12px; outline-color: var(--chinh); font: inherit; line-height: 1.45; }
+.tro-ly-nhap button { min-height: 44px; padding: 0 14px; border: 0; border-radius: 12px; color: #fff; background: var(--chinh); font-weight: 650; cursor: pointer; }
+.tro-ly-nhap button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Hồ sơ cá nhân */
+.trang-ca-nhan { max-width: 900px; }
+.trang-ca-nhan h1 { font-size: clamp(36px, 4vw, 48px); }
+.ho-so-nhan { margin: 0 0 8px; color: var(--chinh); font-size: 13px; font-weight: 800; letter-spacing: 0.14em; }
+.ho-so-mo-ta { margin: 10px 0 24px; color: var(--xam); }
+.trang-ca-nhan .hop { padding: clamp(24px, 4vw, 40px); }
+.ho-so-anh-khu { display: flex; align-items: center; gap: 24px; margin-bottom: 28px; }
+.ho-so-anh { display: block; width: 156px; height: 156px; flex: 0 0 156px; overflow: hidden; border: 1px solid #d9dce1; border-radius: 50%; object-fit: cover; }
+.ho-so-anh-mac-dinh { position: relative; border-radius: 18px; background: #e4e6e9; }
+.ho-so-anh-mac-dinh::before { position: absolute; top: 17%; left: 35%; width: 30%; aspect-ratio: 1; border-radius: 50%; background: #777b80; content: ""; }
+.ho-so-anh-mac-dinh::after { position: absolute; bottom: -15%; left: 14%; width: 72%; height: 52%; border-radius: 50% 50% 0 0; background: #777b80; content: ""; }
+.ho-so-anh-thao-tac p { margin: 8px 0 0; color: var(--xam); font-size: 13px; }
+.ho-so-tep-anh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+.ho-so-tep-anh:focus-visible + * { outline: 3px solid var(--nhan); }
+.ho-so-bo-anh { display: inline-block; margin-top: 8px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.menu-anh-dai-dien { width: 34px; height: 34px; margin-right: 8px; border-radius: 50%; object-fit: cover; vertical-align: middle; }
+
+/* 10. Chuyển động ngắn, nhẹ để giao diện không gây rối */
 @keyframes hien-len {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 10. Bố cục trên điện thoại và máy tính bảng */
+/* 11. Bố cục trên điện thoại và máy tính bảng */
 @media (max-width: 800px) {
-  .khung { width: min(100% - 32px, 680px); padding-top: 30px; }
+  .khung { width: min(100% - 32px, 760px); padding-top: 30px; }
   .xac-thuc { grid-template-columns: 1fr; }
   .xac-thuc-trai { min-height: 300px; padding: 30px 24px; }
   .xac-thuc-trai h2 { font-size: 32px; }
@@ -287,16 +332,20 @@ button, input, textarea { font: inherit; }
 }
 
 @media (max-width: 560px) {
-  .thanh-menu-trong { width: calc(100% - 28px); min-height: 64px; gap: 10px; }
-  .logo { font-size: 19px; }
+  .thanh-menu-trong { width: 100%; min-height: 64px; padding: 10px 14px; gap: 10px; }
+  .logo { font-size: 21px; }
   .menu-phai { gap: 10px; }
   .menu-phai .nut-nho { padding: 7px 10px; font-size: 13px; }
   .menu-link { font-size: 14px; }
   .o-tim-kiem { align-items: stretch; }
   .o-tim-kiem .nut { padding-right: 14px; padding-left: 14px; }
   .luoi-the { grid-template-columns: 1fr; gap: 17px; }
-  .the-anh { height: 200px; }
+  .the-anh { height: 210px; }
   .bai-chi-tiet h1 { font-size: 32px; }
+  .ho-so-anh-khu { align-items: flex-start; flex-direction: column; }
+  .tro-ly { right: 14px; bottom: 14px; }
+  .tro-ly-nut { width: 54px; height: 54px; }
+  .tro-ly-hop { right: -4px; bottom: 66px; }
 }
 
 /* Tôn trọng cài đặt giảm chuyển động của hệ điều hành */
