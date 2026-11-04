@@ -19,7 +19,10 @@ from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash, check_password_hash
 
-load_dotenv()  # đọc file .env
+# Tự động nạp file .env từ thư mục backend hoặc thư mục gốc dự án
+thu_muc_hien_tai = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(thu_muc_hien_tai, ".env"))
+load_dotenv(os.path.join(os.path.dirname(thu_muc_hien_tai), ".env"))
 
 app = Flask(__name__)
 CORS(app)
